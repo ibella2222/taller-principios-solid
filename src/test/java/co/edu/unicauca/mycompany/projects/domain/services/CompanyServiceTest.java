@@ -13,9 +13,6 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Test unitario para CompanyService
- */
 public class CompanyServiceTest {
     
     @Mock
@@ -54,7 +51,7 @@ public class CompanyServiceTest {
 
     @Test
     void testCreateCompany_Success() {
-        Company newCompany = new Company("123459", "Empresa D", "3434345", "www.mipagina4.com", Sector.SERVICES, "gerente4@gmail.com", "123");
+        Company newCompany = new Company("123459", "Empresa D", "3434345", "www.mipagina4.com", Sector.SERVICES, "gerente4@gmail.com", "Password1@");
         
         when(validatorMock.isValid(newCompany)).thenReturn(true);
         when(repositoryMock.save(newCompany)).thenReturn(true);
@@ -68,7 +65,7 @@ public class CompanyServiceTest {
 
     @Test
     void testCreateCompany_Failure_ValidationFails() {
-        Company newCompany = new Company("123459", "Empresa D", "3434345", "www.mipagina4.com", Sector.SERVICES, "gerente4@gmail.com", "123");
+        Company newCompany = new Company("123459", "Empresa D", "3434345", "www.mipagina4.com", Sector.SERVICES, "gerente4@gmail.com", "Password1@");
         
         when(validatorMock.isValid(newCompany)).thenReturn(false);
         
@@ -81,7 +78,7 @@ public class CompanyServiceTest {
 
     @Test
     void testCreateCompany_Failure_SaveFails() {
-        Company newCompany = new Company("123459", "Empresa D", "3434345", "www.mipagina4.com", Sector.SERVICES, "gerente4@gmail.com", "123");
+        Company newCompany = new Company("123459", "Empresa D", "3434345", "www.mipagina4.com", Sector.SERVICES, "gerente4@gmail.com", "Password1@");
         
         when(validatorMock.isValid(newCompany)).thenReturn(true);
         when(repositoryMock.save(newCompany)).thenReturn(false);
@@ -93,18 +90,58 @@ public class CompanyServiceTest {
         verify(repositoryMock, times(1)).save(newCompany);
     }
 
-    /**
-     * Test of createCompany method, of class CompanyService.
-     */
     @Test
-    public void testCreateCompany() {
+    void testCreateCompany_Failure_InvalidEmail() {
+        Company newCompany = new Company("123459", "Empresa D", "3434345", "invalid-email", Sector.SERVICES, "Password1@", "123");
+
+        when(validatorMock.isValid(newCompany)).thenReturn(false);
+
+        boolean result = companyService.createCompany(newCompany);
+
+        assertFalse(result);
+        verify(validatorMock, times(1)).isValid(newCompany);
+        verify(repositoryMock, never()).save(newCompany);
     }
 
-    /**
-     * Test of findCompanyByNit method, of class CompanyService.
-     */
     @Test
-    public void testFindCompanyByNit() {
+    void testCreateCompany_Failure_InvalidPassword() {
+        Company newCompany = new Company("123459", "Empresa D", "3434345", "gerente4@gmail.com", Sector.SERVICES, "pass", "123");
+
+        when(validatorMock.isValid(newCompany)).thenReturn(false);
+
+        boolean result = companyService.createCompany(newCompany);
+
+        assertFalse(result);
+        verify(validatorMock, times(1)).isValid(newCompany);
+        verify(repositoryMock, never()).save(newCompany);
+    }
+
+    @Test
+    void testFindCompanyByNit_Success() {
+        String nit = "123459";
+        Company expectedCompany = new Company(nit, "Empresa D", "3434345", "www.mipagina4.com", Sector.SERVICES, "gerente4@gmail.com", "Password1@");
+
+        when(repositoryMock.findByNit(nit)).thenReturn(expectedCompany);
+
+        Company result = companyService.findCompanyByNit(nit);
+
+        assertNotNull(result);
+        assertEquals(expectedCompany.getNit(), result.getNit());
+        assertEquals(expectedCompany.getName(), result.getName());
+        verify(repositoryMock, times(1)).findByNit(nit);
+    }
+
+    @Test
+    void testFindCompanyByNit_NotFound() {
+        String nit = "123460";
+
+        when(repositoryMock.findByNit(nit)).thenReturn(null);
+
+        Company result = companyService.findCompanyByNit(nit);
+
+        assertNull(result);
+        verify(repositoryMock, times(1)).findByNit(nit);
     }
 }
+
 
